@@ -1,0 +1,224 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The 113 Report | Taiwan Stray Dog Analysis</title>
+    
+    <!-- 引入國際精品風格字體與地圖框架 -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Montserrat:wght@300;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        :root {
+            --bordeaux: #630D16; /* 高級深紅 */
+            --paper: #FAF9F6;   /* 香檳白 */
+            --obsidian: #1A1A1A; /* 曜石黑 */
+            --clay: #D4D4D4;    /* 暖灰色 */
+        }
+
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            background-color: var(--paper); 
+            color: var(--obsidian); 
+            margin: 0; padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* 巴黎時裝秀風格 Hero Section */
+        header {
+            height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            border-bottom: 1px solid var(--clay); margin-bottom: 80px;
+        }
+
+        .edition-label { 
+            font-size: 0.8rem; letter-spacing: 5px; text-transform: uppercase; 
+            margin-bottom: 20px; color: var(--bordeaux); font-weight: 600;
+        }
+
+        h1 { 
+            font-family: 'Playfair Display', serif; font-size: 5rem; 
+            margin: 0; line-height: 1; letter-spacing: -2px;
+        }
+
+        .author-tag {
+            margin-top: 30px; font-style: italic; font-family: 'Playfair Display', serif;
+            font-size: 1.2rem; color: var(--obsidian);
+        }
+
+        /* 極簡內容區塊 */
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+
+        .abstract {
+            font-size: 1.4rem; line-height: 1.8; text-align: justify;
+            margin-bottom: 120px; font-weight: 300; border-left: 1px solid var(--bordeaux);
+            padding-left: 40px;
+        }
+
+        /* 數據卡片：高級珠寶櫃風格 */
+        .stat-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+            background: var(--clay); margin-bottom: 120px;
+        }
+        .stat-item {
+            background: var(--paper); padding: 50px 20px; text-align: center;
+        }
+        .stat-label { font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; color: var(--text-soft); }
+        .stat-val { font-family: 'Playfair Display', serif; font-size: 2.8rem; margin-top: 10px; color: var(--bordeaux); }
+
+        /* 地圖與圖表 */
+        section { margin-bottom: 150px; }
+        .section-title {
+            font-family: 'Playfair Display', serif; font-size: 2.5rem;
+            margin-bottom: 60px; border-bottom: 1px solid var(--obsidian);
+            display: flex; justify-content: space-between; align-items: baseline;
+        }
+        .section-title span { font-size: 0.9rem; font-family: 'Montserrat'; letter-spacing: 2px; }
+
+        .map-wrapper { 
+            height: 600px; width: 100%; filter: grayscale(1); transition: 0.5s; 
+            border-radius: 2px; overflow: hidden;
+        }
+        .map-wrapper:hover { filter: grayscale(0.2); }
+
+        .chart-wrapper { height: 800px; padding: 40px; background: white; border: 1px solid #EEE; }
+
+        /* 1959 懸浮按鈕：時裝秀標牌風格 */
+        .cta-1959 {
+            position: fixed; bottom: 40px; left: 40px; background: var(--obsidian);
+            color: white; padding: 20px 40px; text-decoration: none;
+            font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase;
+            z-index: 100; transition: 0.3s;
+        }
+        .cta-1959:hover { background: var(--bordeaux); }
+
+        footer {
+            padding: 80px 0; border-top: 1px solid var(--clay);
+            text-align: center; font-size: 0.8rem; letter-spacing: 1px; opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+<a href="tel:1959" class="cta-1959">Line 1959 / 24H Hotline</a>
+
+<header>
+    <div class="edition-label">Annual Report 113</div>
+    <h1>Taiwan Stray Dog Analysis</h1>
+    <div class="author-tag">Visualized by Y. H. Huang</div>
+</header>
+
+<div class="container">
+    <div class="abstract">
+        根據來源資料顯示，113 年全國遊蕩犬總數調查結果為 141,584 隻。這份報告不僅是數字的統計，更是「尊重生命」理念的視覺化實踐。我們透過精確的地圖數據與人口比例分析，試圖在數據的森林中尋找人與動物和諧共處的設計解決方案。
+    </div>
+
+    <!-- 數據儀表板 -->
+    <div class="stat-grid">
+        <div class="stat-item">
+            <div class="stat-label">National Total</div>
+            <div class="stat-val">141,584</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">Highest Density</div>
+            <div class="stat-val">4.04%</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">Hotspot</div>
+            <div class="stat-val">Tainan</div>
+        </div>
+    </div>
+
+    <!-- 地圖區塊 -->
+    <section>
+        <div class="section-title">
+            Distribution Map <span>泡圖</span>
+        </div>
+        <div class="map-wrapper" id="map"></div>
+    </section>
+
+    <!-- 圖表區塊 -->
+    <section>
+        <div class="section-title">
+            Population Density <span>人犬密度對比</span>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="luxuryBarChart"></canvas>
+        </div>
+    </section>
+
+    <footer>
+        ADDRESS / 10014 臺北市中正區南海路 37 號 [1] <br>
+        DATA SOURCE / ANIMAL PROTECTION RESOURCES AND WELFARE STATISTICS [2]
+    </footer>
+</div>
+
+<script>
+    // 正確來源數據 [2]
+    const data113 = [
+        {name: '臺東縣', count: 8551, per100: 4.04, lat: 22.75, lng: 121.14},
+        {name: '嘉義縣', count: 16944, per100: 3.50, lat: 23.45, lng: 120.30},
+        {name: '花蓮縣', count: 6983, per100: 2.20, lat: 23.97, lng: 121.60},
+        {name: '南投縣', count: 9644, per100: 2.02, lat: 23.91, lng: 120.68},
+        {name: '苗栗縣', count: 7403, per100: 1.38, lat: 24.56, lng: 120.82},
+        {name: '屏東縣', count: 10024, per100: 1.26, lat: 22.67, lng: 120.48},
+        {name: '臺南市', count: 19990, per100: 1.07, lat: 22.99, lng: 120.21},
+        {name: '基隆市', count: 3112, per100: 0.86, lat: 25.12, lng: 121.73},
+        {name: '彰化縣', count: 9313, per100: 0.75, lat: 24.05, lng: 120.51},
+        {name: '雲林縣', count: 4934, per100: 0.75, lat: 23.70, lng: 120.43},
+        {name: '澎湖縣', count: 520, per100: 0.48, lat: 23.57, lng: 119.57},
+        {name: '高雄市', count: 10200, per100: 0.37, lat: 22.62, lng: 120.31},
+        {name: '臺北市', count: 1908, per100: 0.08, lat: 25.03, lng: 121.56}
+    ];
+
+    // 1. 初始化時尚地圖
+    const map = L.map('map', { scrollWheelZoom: false, zoomControl: false }).setView([23.7, 120.9], 7);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    data113.forEach(city => {
+        // 比照來源圖片 [3] 的紅色泡泡風格，但賦予高訂色調
+        L.circle([city.lat, city.lng], {
+            color: 'white', weight: 0.5, fillColor: '#630D16', fillOpacity: 0.8,
+            radius: Math.sqrt(city.count) * 220 
+        }).addTo(map).bindPopup(`<b>${city.name}</b><br>估計：${city.count.toLocaleString()} 隻`);
+    });
+
+    // 2. 初始化高級橫條圖
+    const sortedData = [...data113].sort((a, b) => b.per100 - a.per100);
+    const ctx = document.getElementById('luxuryBarChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sortedData.map(d => d.name.toUpperCase()),
+            datasets: [{
+                label: 'COUNT PER 100',
+                data: sortedData.map(d => d.per100),
+                backgroundColor: sortedData.map(d => d.count > 10000 ? '#630D16' : '#D4D4D4'),
+                barThickness: 10,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { font: { size: 10, family: 'Montserrat' } }, grid: { display: false } },
+                y: { ticks: { font: { size: 11, family: 'Montserrat' } }, grid: { display: false } }
+            }
+        }
+    });
+
+    // GSAP 高級感載入動畫
+    gsap.from("h1", { duration: 2, y: 100, opacity: 0, ease: "power4.out" });
+    gsap.from(".stat-item", { duration: 1.5, opacity: 0, y: 50, stagger: 0.3, delay: 1 });
+</script>
+
+</body>
+</html>
+```
