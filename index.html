@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>臺灣遊蕩犬分析 - 113年度</title>
+    <!-- 引入 Leaflet 與 Chart.js -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary-red: #cc2b2b; --text-color: #333; }
+        body { font-family: "PingFang TC", "Heiti TC", sans-serif; background-color: #ffffff; color: var(--text-color); margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        h2 { color: var(--primary-red); font-size: 28px; font-weight: bold; margin-bottom: 15px; }
+        .author { font-size: 14px; color: #999; margin-bottom: 10px; }
+        .description { font-size: 16px; line-height: 1.6; color: #555; margin-bottom: 25px; text-align: justify; }
+        #map { height: 500px; width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .chart-box { height: 600px; margin-bottom: 20px; }
+        .analysis-text { background: #f9f9f9; padding: 15px; border-radius: 8px; font-size: 15px; color: #444; border-left: 4px solid var(--primary-red); margin-bottom: 50px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="author">作者：黃毓軒</div>
+    <h2>臺灣遊蕩犬分析</h2>
+    
+    <div class="description">
+        <strong>前言：</strong><br>
+        本網頁透過數據視覺化呈現 113 年臺灣遊蕩犬分布現況，旨在提升大眾對流浪動物議題的理性關注。透過分析遊蕩犬總數與每百人承載比例，我們能更精確地識別資源需求熱區，推動精準絕育與飼主責任教育，實踐「尊重生命」的社會核心價值 [3]。資料來源係根據農業部「動物保護資訊網」公布之官方調查結果，數據具高度權威性與參考意義 [2]。
+    </div>
+
+    <!-- 1. 互動式地圖 -->
+    <h2>泡圖)</h2>
+    <div class="description">
+        地圖上的紅色泡泡大小，<strong>依據各地遊蕩犬數量動態縮放顯示</strong> [1]。
+    </div>
+    <div id="map"></div>
+    <div class="analysis-text">
+        <strong>數據分析：</strong> 全國遊蕩犬總數達 141,584 隻。臺南市以 19,990 隻位居全國之冠，嘉義縣 16,944 隻次之 [2]。南部熱區泡泡明顯較大，顯示該區域動保管理壓力極大，急需資源挹注 [1]。
+    </div>
+
+    <!-- 2. 互動式橫條圖 -->
+    <h2>人犬密度對比 (隻/百人)</h2>
+    <div class="description">
+        橫條長度代表每百人遊蕩犬數，<strong>顏色深淺則依據該縣市之「遊蕩犬估計總數」變化</strong>。
+    </div>
+    <div class="chart-box">
+        <canvas id="barChart"></canvas>
+    </div>
+    <div class="analysis-text">
+        <strong>數據分析：</strong> 臺東縣（4.04 隻）與嘉義縣（3.50 隻）的人犬密度全國最高 [2]。此數據反映偏鄉區域雖然人口較少，但人犬衝突與防疫壓力卻遠高於臺北市（0.08 隻）等都會區 [2]。
+    </div>
+</div>
+
+<script>
+    // 來源數據 (根據統計資料整理)
+    const rawData = [
+        {name: '臺東縣', count: 8551, per100: 4.04, lat: 22.75, lng: 121.14},
+        {name: '嘉義縣', count: 16944, per100: 3.50, lat: 23.45, lng: 120.30},
+        {name: '花蓮縣', count: 6983, per100: 2.20, lat: 23.97, lng: 121.60},
+        {name: '南投縣', count: 9644, per100: 2.02, lat: 23.91, lng: 120.68},
+        {name: '苗栗縣', count: 7403, per100: 1.38, lat: 24.56, lng: 120.82},
+        {name: '屏東縣', count: 10024, per100: 1.26, lat: 22.67, lng: 120.48},
+        {name: '臺南市', count: 19990, per100: 1.07, lat: 22.99, lng: 120.21},
+        {name: '基隆市', count: 3112, per100: 0.86, lat: 25.12, lng: 121.73},
+        {name: '彰化縣', count: 9313, per100: 0.75, lat: 24.05, lng: 120.51},
+        {name: '雲林縣', count: 4934, per100: 0.75, lat: 23.70, lng: 120.43},
+        {name: '澎湖縣', count: 520, per100: 0.48, lat: 23.57, lng: 119.57},
+        {name: '新竹縣', count: 2396, per100: 0.41, lat: 24.83, lng: 121.01},
+        {name: '高雄市', count: 10200, per100: 0.37, lat: 22.62, lng: 120.31},
+        {name: '宜蘭縣', count: 1630, per100: 0.36, lat: 24.75, lng: 121.75},
+        {name: '桃園市', count: 7893, per100: 0.34, lat: 24.99, lng: 121.30},
+        {name: '嘉義市', count: 906, per100: 0.34, lat: 23.48, lng: 120.44},
+        {name: '臺中市', count: 8542, per100: 0.30, lat: 24.14, lng: 120.67},
+        {name: '新北市', count: 9982, per100: 0.25, lat: 25.01, lng: 121.46},
+        {name: '連江縣', count: 26, per100: 0.19, lat: 26.15, lng: 119.92},
+        {name: '金門縣', count: 167, per100: 0.12, lat: 24.43, lng: 118.32},
+        {name: '新竹市', count: 516, per100: 0.11, lat: 24.81, lng: 120.96},
+        {name: '臺北市', count: 1908, per100: 0.08, lat: 25.03, lng: 121.56}
+    ];
+
+    // 顏色函式：根據估計數給予不同深淺的紅
+    const getColorByCount = (count) => {
+        if (count > 15000) return '#8b0000'; // 極深紅
+        if (count > 10000) return '#cc2b2b'; // 深紅
+        if (count > 5000) return '#e67e22';  // 橘紅
+        return '#f1948a';                   // 淺紅
+    };
+
+    // 1. 初始化地圖 (Leaflet)
+    const map = L.map('map').setView([23.7, 120.9], 7);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    rawData.forEach(city => {
+        L.circle([city.lat, city.lng], {
+            color: 'white', weight: 1, fillColor: '#cc2b2b', fillOpacity: 0.7,
+            radius: Math.sqrt(city.count) * 200 // 依據估計數縮放 [1]
+        }).addTo(map).bindPopup(`<b>${city.name}</b><br>估計數：${city.count} 隻`);
+    });
+
+    // 2. 初始化橫條圖 (Chart.js)
+    const ctx = document.getElementById('barChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: rawData.map(d => d.name),
+            datasets: [{
+                label: '每百人遊蕩犬數',
+                data: rawData.map(d => d.per100),
+                backgroundColor: rawData.map(d => getColorByCount(d.count)), // 根據估計數變色
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: { callbacks: { footer: (items) => `估計總數: ${rawData[items.dataIndex].count} 隻` } }
+            }
+        }
+    });
+</script>
+</body>
+</html>
+
+
+-------------------------------------------------------------------
+
+
